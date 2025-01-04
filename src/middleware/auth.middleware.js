@@ -1,7 +1,9 @@
-import { ApiError } from "../utils/ApiError"
-import {asyncHandalar} from "../utils/asyncHandaler"
-import { jwt } from "jsonwebtoken"
-import { User} from "../models/user.models"
+import { ApiError } from "../utils/ApiError.js"
+import {asyncHandalar} from "../utils/asyncHandaler.js"
+
+import jwt  from "jsonwebtoken"
+import { User} from "../models/user.models.js"
+
 
 export const verifyJWT = asyncHandalar (async(req, _, next) => {
   try {
