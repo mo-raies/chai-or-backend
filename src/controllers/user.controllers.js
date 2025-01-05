@@ -92,7 +92,6 @@ const registerUser = asyncHandalar(async (req, res) => {
   );
 });
 
-
 const loginUser = asyncHandalar (async (req ,res ) => {
   // request body -> data 
   // username or email 
@@ -168,7 +167,7 @@ const logoutUser = asyncHandalar ( async (req ,res) => {
   .json (new ApiResponse (200, {}, "user logged out"))
 })
 
-const refreshAccessToken = (async (req , res) => {
+const refreshAccessToken = asyncHandalar (async (req , res) => {
 const inComingRefreshToken =   req.cookie.refreshToken || req.body.refreshToken
 
 if (!inComingRefreshToken) {
@@ -213,9 +212,117 @@ try {
 
 })
 
+const changeCurrentPassword = asyncHandalar ( async (req ,res)=> {
+  const {oldPassword, newPassword, } = req.body
+  const user = await User.findById(req.user?._id)
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+ 
+  if (!isPasswordCorrect){
+    throw new ApiError (400, "invalid password")
+  }
+  user.password = newPassword
+  user.save({validateBeforeSave: false})
+
+  return res
+  .status(200)
+  .json( new ApiResponse (200, {}, "password changed successfully"))
+})
+
+const getCurrentUser = asyncHandalar (async (req, res )=> {
+  return res 
+  .status(200)
+  .json(200, req.user, "current user fetched successfully")
+})
+
+const updateAccountDetails = asyncHandalar ( async (req , res )=> {
+  const {fullName, email} = req.body
+
+  if (!fullName || !email) {
+    throw new ApiError (400, "All fields are required")
+  }
+  const user =  User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set:{
+        fullName,
+        email: email
+      }
+    },
+    {new: true}).select("-password") 
+    
+    return res
+    .status(200)
+    .json(new ApiResponse (200, user ,"Account details updated successfully"))
+
+})
+
+const updateUserAvatar = asyncHandalar ( async (req ,res )=> {
+const avatarLocalPath = req.file?.path
+if (!avatarLocalPath) {
+  throw new ApiError (400 , "Avatar file is missing")
+}
+const avatar =  await uploadOnCloudinary(avatarLocalPath)
+
+if (!avatar.url) {
+  throw new ApiError (400, "Error while uploding on Avatar")
+}
+
+const user = await User.findByIdAndUpdate(
+  req.user?._id,
+  { 
+    $set: {
+      avatar: avatar.url
+    }
+  },
+  {new: true}).select("-password")
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse (200 , user, "Avatar updated successfully")
+  )
+
+})
+
+const updateUserCoverImage = asyncHandalar ( async (req ,res )=> {
+const coverImageLocalPath = req.file?.path
+
+if (!coverImageLocalPath) {
+  throw new ApiError (400 , "Avatar file is missing")
+}
+const coverImage =  await uploadOnCloudinary(coverImageLocalPath)
+
+if (!coverImage.url) {
+  throw new ApiError (400, "Error while uploding on Cover Image")
+}
+
+const user = await User.findByIdAndUpdate(
+  req.user?._id,
+  { 
+    $set: {
+      coverImage: coverImage.url
+    }
+  },
+  {new: true}).select("-password")
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse (200 , user, "Cover Image updated successfully")
+  )
+
+})
+
+
 export {
   registerUser,
   loginUser,
   logoutUser,
-  refreshAccessToken
+  refreshAccessToken,
+  changeCurrentPassword,
+  getCurrentUser,
+  updateAccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage 
+
  };
