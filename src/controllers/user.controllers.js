@@ -148,8 +148,8 @@ const logoutUser = asyncHandalar ( async (req ,res) => {
   User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        refreshToken: undefined
+      $unset: {
+        refreshToken: 1 // this remove the field from document
       }
     },{
       new: true
@@ -230,7 +230,7 @@ const changeCurrentPassword = asyncHandalar ( async (req ,res)=> {
 const getCurrentUser = asyncHandalar (async (req, res )=> {
   return res 
   .status(200)
-  .json(200, req.user, "current user fetched successfully")
+  .json(new ApiResponse (200, req.user, "current user fetched successfully"))
 })
 
 const updateAccountDetails = asyncHandalar ( async (req , res )=> {
@@ -313,7 +313,7 @@ const user = await User.findByIdAndUpdate(
 })
 
 const getUserChannelProfile = asyncHandalar ( async (req , res) => {
-  const {username} = req.parms
+  const {username} = req.body
 
   if (!username?.trim()) {
     throw new ApiError (400 , "username is missing")
